@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmació d'Assistència</title>
+    <style>
+        @font-face {
+            font-family: 'Above the Beyond Script W00 Rg';
+            src: url('Above_the_Beyond_Script_W00_Rg.woff2') format('woff2'),
+                 url('Above_the_Beyond_Script_W00_Rg.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        /* ESTILS CSS DEL TEU FORMULARI */
+        body {
+            font-family: 'Above the Beyond Script W00 Rg', Arial, sans-serif; /* Aplica la nova font principal */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4; /* Color de fons de fallback */
+            margin: 0;
+            line-height: 1.6;
+
+        /* --- ESTILS PER LA IMATGE DE FONS (MODIFICAT) --- */
+            background-image: url('imatge-de-fons.jpg'); /* <-- POSA AQUÍ EL NOM DEL TEU FITXER D'IMATGE */
+            background-repeat: no-repeat; /* La imatge no es repeteix */
+	    background-size: contain;
+            background-position: center center; /* Centra la imatge */
+            background-attachment: fixed; /* Fixa la imatge mentre es fa scroll */
+            /* NO DEFINIM background-size, de manera que la imatge es mostra a la seva mida original */
+            /* --- FI ESTILS PER LA IMATGE DE FONS --- */
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9); /* Fons blanc amb una mica de transparència per veure la imatge */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 550px;
+        }
+        h1, h2, label {
+            color: #524634;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5em;
+        }
+        h2 {
+            font-size: 1.5em;
+        }
+        input[type="text"], textarea {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+            color: #524634;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        button {
+            background-color: #768931;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #524634;
+        }
+        .message {
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .question-group {
+            margin-bottom: 25px;
+        }
+        .question-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .option-buttons button {
+            background-color: #e2e6ea;
+            color: #524634;
+            border: 1px solid #cdd0d3;
+            margin: 0 5px;
+            min-width: 80px;
+        }
+        .option-buttons button.selected {
+            background-color: #768931;
+            color: white;
+            border-color: #768931;
+        }
+        .option-buttons button:hover {
+            background-color: #d1d6db;
+        }
+        .option-buttons button.selected:hover {
+            background-color: #524634;
+        }
+        .final-message {
+            font-size: 1.4em;
+            color: #768931;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="formTitle">Confirma la teva assistència</h1>
+
+        <div id="nameValidationSection">
+            <h2>Introdueix el teu nom i el teu primer cognom</h2>
+            <input type="text" id="userNameInput" placeholder="Nom i primer cognom">
+            <button id="checkNameButton">Comprovar Nom</button>
+            <div id="message1" class="message"></div>
+        </div>
+
+        <div id="attendanceQuestionSection" class="hidden question-group">
+            <label>1. Assistència: Podràs assistir a la celebració?</label>
+            <div class="option-buttons">
+                <button id="attendanceYes">Sí</button>
+                <button id="attendanceNo">No</button>
+            </div>
+            <div id="message2" class="message"></div>
+        </div>
+
+        <div id="dietQuestionSection" class="hidden question-group">
+            <label>2. Necessites una dieta especial que haguem d'informar al restaurant?</label>
+            <div class="option-buttons">
+                <button id="dietYes">Sí</button>
+                <button id="dietNo">No</button>
+            </div>
+            <div id="dietTextInput" class="hidden">
+                <textarea id="dietText" placeholder="Especifica la teva dieta especial aquí..."></textarea>
+            </div>
+            <button id="nextFromDietButton" class="hidden">Següent</button>
+            <div id="message3" class="message"></div>
+        </div>
+
+        <div id="coachQuestionSection" class="hidden question-group">
+            <label>3. T'interessaria utilitzar un autocar amb la ruta a Barcelona o Sabadell?</label>
+            <div class="option-buttons">
+                <button id="coachBarcelona">Barcelona</button>
+                <button id="coachSabadell">Sabadell</button>
+                <button id="coachNoBus">No</button>
+            </div>
+            <button id="submitAllAnswersButton" class="hidden">Finalitzar i Enviar</button>
+            <div id="message4" class="message"></div>
+        </div>
+
+        <div id="finalMessageSection" class="hidden">
+            <p class="final-message" id="finalUserMessage"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // COPIA AQUÍ L'URL DEL TEU DESPLEGAMENT DE GOOGLE APPS SCRIPT
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzO-2Y0EBqrOLKjZOgX75Vxkllb2TEahf3tRhso4Wjn1SndDY7effqDYB9sJhfUWM3xTg/exec'; // <--- Pega la URL copiada aquí
+
+        // Llista de noms ocults (assegura't que coincideixi amb la teva llista desitjada)
+        const hiddenNames = [
+            "Maria Garcia",
+            "Joan Pujol",
+            "Laura Pons",
+            "Pere Roig",
+            "Anna Soler",
+            "Carles Vidal",
+            "Sofia Martinez",
+            "Adrià Mínguez",
+            "Guillem Agüero",
+            "Laia Seguí", // Afegit per si vols provar un nom nou
+            "Pol Oliver" // Afegit per si vols provar un nom nou
+        ];
+
+        // --- Funcions de normalització de text ---
+        function normalizeString(str) {
+            return str
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .trim();
+        }
+
+        // --- Referències als elements del DOM ---
+        // S'assegura que tots els elements existeixen abans d'intentar accedir-hi
+        const formTitle = document.getElementById('formTitle');
+        const nameValidationSection = document.getElementById('nameValidationSection');
+        const attendanceQuestionSection = document.getElementById('attendanceQuestionSection');
+        const dietQuestionSection = document.getElementById('dietQuestionSection');
+        const coachQuestionSection = document.getElementById('coachQuestionSection');
+        const finalMessageSection = document.getElementById('finalMessageSection');
+
+        const userNameInput = document.getElementById('userNameInput');
+        const checkNameButton = document.getElementById('checkNameButton');
+        const message1 = document.getElementById('message1');
+        const message2 = document.getElementById('message2');
+        const message3 = document.getElementById('message3');
+        const message4 = document.getElementById('message4');
+
+        const attendanceYesButton = document.getElementById('attendanceYes');
+        const attendanceNoButton = document.getElementById('attendanceNo');
+
+        const dietYesButton = document.getElementById('dietYes');
+        const dietNoButton = document.getElementById('dietNo');
+        const dietTextInputDiv = document.getElementById('dietTextInput');
+        const dietTextarea = document.getElementById('dietText');
+        const nextFromDietButton = document.getElementById('nextFromDietButton');
+
+        const coachBarcelonaButton = document.getElementById('coachBarcelona');
+        const coachSabadellButton = document.getElementById('coachSabadell');
+        const coachNoBusButton = document.getElementById('coachNoBus');
+        const submitAllAnswersButton = document.getElementById('submitAllAnswersButton');
+
+        const finalUserMessage = document.getElementById('finalUserMessage');
+
+
+        // --- Dades del formulari a enviar ---
+        let formDataToSend = {
+            userName: '',
+            assistencia: '',
+            dietaEspecial: '',
+            textDieta: '',
+            autocar: '',
+            textAutocar: '',
+            missatgeFinal: ''
+        };
+
+        // --- Funcions d'ajuda per gestionar la visibilitat i la selecció ---
+        function showSection(sectionElement) {
+            sectionElement.classList.remove('hidden');
+        }
+
+        function hideSection(sectionElement) {
+            sectionElement.classList.add('hidden');
+        }
+
+        function selectOption(buttonGroupElement, selectedButton, valueToSet, dataKey) {
+            Array.from(buttonGroupElement.children).forEach(button => {
+                button.classList.remove('selected');
+            });
+            selectedButton.classList.add('selected');
+            formDataToSend[dataKey] = valueToSet;
+        }
+
+        // --- Funció per enviar totes les dades a Google Sheets ---
+        async function sendDataToGoogleSheets() {
+            message4.textContent = "Enviant respostes... Si us plau, espera.";
+            message4.className = "message";
+            
+            if (submitAllAnswersButton) { // Comprova que el botó existeixi abans d'intentar deshabilitar-lo
+                submitAllAnswersButton.disabled = true;
+            }
+
+            const form = new FormData();
+            for (const key in formDataToSend) {
+                form.append(key, formDataToSend[key]);
+            }
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: form,
+                });
+
+                if (response.ok) {
+                    message4.textContent = "Dades guardades amb èxit!";
+                    message4.className = "message success";
+                    
+                    hideSection(nameValidationSection);
+                    hideSection(attendanceQuestionSection);
+                    hideSection(dietQuestionSection);
+                    hideSection(coachQuestionSection); // S'amaga la secció de l'autocar
+                    
+                    showSection(finalMessageSection);
+                    finalUserMessage.textContent = formDataToSend.missatgeFinal;
+                    formTitle.classList.add('hidden');
+                } else {
+                    const errorText = await response.text();
+                    message4.textContent = `Error en guardar les dades: ${errorText}`;
+                    message4.className = "message error";
+                }
+            } catch (error) {
+                message4.textContent = `Error de connexió: ${error.message}`;
+                message4.className = "message error";
+            } finally {
+                if (submitAllAnswersButton) { // Comprova que el botó existeixi abans d'intentar habilitar-lo
+                    submitAllAnswersButton.disabled = false;
+                }
+            }
+        }
+
+
+        // --- Lògica principal del formulari (execució pas a pas) ---
+
+        // Pas 1: Validació del nom
+        checkNameButton.addEventListener('click', () => {
+            const userInput = userNameInput.value.trim();
+            
+            const normalizedUserInput = normalizeString(userInput);
+            const nameFound = hiddenNames.some(name => normalizeString(name) === normalizedUserInput);
+
+            if (nameFound) {
+                formDataToSend.userName = userInput;
+                message1.textContent = "Nom trobat! Benvingut/da.";
+                message1.className = "message success";
+                hideSection(nameValidationSection);
+                showSection(attendanceQuestionSection);
+                formTitle.textContent = "Confirma la teva assistència";
+            } else {
+                message1.textContent = "Nom no trobat. Torna-ho a provar.";
+                message1.className = "message error";
+            }
+        });
+
+        // Pas 2: Pregunta d'Assistència
+        attendanceYesButton.addEventListener('click', () => {
+            selectOption(attendanceQuestionSection.querySelector('.option-buttons'), attendanceYesButton, 'Sí', 'assistencia');
+            message2.textContent = "";
+            hideSection(attendanceQuestionSection);
+            showSection(dietQuestionSection);
+            formTitle.textContent = "Necessites una dieta especial?";
+        });
+
+        attendanceNoButton.addEventListener('click', async () => {
+            selectOption(attendanceQuestionSection.querySelector('.option-buttons'), attendanceNoButton, 'No', 'assistencia');
+            message2.textContent = "Gràcies! Et trobarem a faltar.";
+            message2.className = "message success";
+            formDataToSend.missatgeFinal = "Gràcies! Et trobarem a faltar.";
+
+            hideSection(attendanceQuestionSection);
+            // Quan es diu 'No' a l'assistència, s'envien les dades i es finalitza
+            await sendDataToGoogleSheets();
+        });
+
+        // Pas 3: Pregunta de Dieta Especial
+        dietYesButton.addEventListener('click', () => {
+            selectOption(dietQuestionSection.querySelector('.option-buttons'), dietYesButton, 'Sí', 'dietaEspecial');
+            showSection(dietTextInputDiv);
+            showSection(nextFromDietButton);
+            message3.textContent = "";
+        });
+
+        dietNoButton.addEventListener('click', () => {
+            selectOption(dietQuestionSection.querySelector('.option-buttons'), dietNoButton, 'No', 'dietaEspecial');
+            hideSection(dietTextInputDiv);
+            dietTextarea.value = ''; // Neteja el text de dieta si s'ha triat 'No'
+            formDataToSend.textDieta = '';
+            showSection(nextFromDietButton);
+            message3.textContent = "";
+        });
+
+        nextFromDietButton.addEventListener('click', () => {
+            formDataToSend.textDieta = dietTextarea.value.trim();
+
+            hideSection(dietQuestionSection);
+            showSection(coachQuestionSection);
+            formTitle.textContent = "Interessat en autocar?";
+        });
+
+        // Pas 4: Pregunta d'Autocar
+        coachBarcelonaButton.addEventListener('click', () => {
+            selectOption(coachQuestionSection.querySelector('.option-buttons'), coachBarcelonaButton, 'Sí', 'autocar');
+            formDataToSend.textAutocar = 'Barcelona';
+            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
+            message4.textContent = "";
+        });
+
+        coachSabadellButton.addEventListener('click', () => {
+            selectOption(coachQuestionSection.querySelector('.option-buttons'), coachSabadellButton, 'Sí', 'autocar');
+            formDataToSend.textAutocar = 'Sabadell';
+            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
+            message4.textContent = "";
+        });
+
+        coachNoBusButton.addEventListener('click', () => {
+            selectOption(coachQuestionSection.querySelector('.option-buttons'), coachNoBusButton, 'No', 'autocar');
+            formDataToSend.textAutocar = ''; // Neteja el text de l'autocar si s'ha triat 'No'
+            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
+            message4.textContent = "";
+        });
+
+        // Final: Enviar totes les respostes
+        submitAllAnswersButton.addEventListener('click', async () => {
+            formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+
+            await sendDataToGoogleSheets();
+        });
+
+    </script>
+</body>
+</html>
