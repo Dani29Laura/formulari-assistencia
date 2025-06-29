@@ -15,26 +15,23 @@
 
         /* ESTILS CSS DEL TEU FORMULARI */
         body {
-            font-family: 'Above the Beyond Script W00 Rg', Arial, sans-serif; /* Aplica la nova font principal */
+            font-family: 'Above the Beyond Script W00 Rg', Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f4f4f4; /* Color de fons de fallback */
+            background-color: #f4f4f4;
             margin: 0;
             line-height: 1.6;
 
-        /* --- ESTILS PER LA IMATGE DE FONS (MODIFICAT) --- */
             background-image: url('imatge-de-fons.jpg'); /* <-- POSA AQUÍ EL NOM DEL TEU FITXER D'IMATGE */
-            background-repeat: no-repeat; /* La imatge no es repeteix */
-	    background-size: contain;
-            background-position: center center; /* Centra la imatge */
-            background-attachment: fixed; /* Fixa la imatge mentre es fa scroll */
-            /* NO DEFINIM background-size, de manera que la imatge es mostra a la seva mida original */
-            /* --- FI ESTILS PER LA IMATGE DE FONS --- */
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: contain
         }
         .container {
-            background-color: rgba(255, 255, 255, 0.9); /* Fons blanc amb una mica de transparència per veure la imatge */
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -168,8 +165,15 @@
                 <button id="coachSabadell">Sabadell</button>
                 <button id="coachNoBus">No</button>
             </div>
-            <button id="submitAllAnswersButton" class="hidden">Finalitzar i Enviar</button>
             <div id="message4" class="message"></div>
+        </div>
+
+        <div id="commentSection" class="hidden question-group">
+            <label>4. Deixa'ns el teu comentari!</label>
+            <div>
+                <textarea id="commentText" placeholder="El teu missatge o qualsevol dubte aquí..."></textarea>
+            </div>
+            <button id="submitAllAnswersButton">Finalitzar i Enviar</button> <div id="messageComment" class="message"></div>
         </div>
 
         <div id="finalMessageSection" class="hidden">
@@ -179,11 +183,9 @@
     </div>
 
     <script>
-        // COPIA AQUÍ L'URL DEL TEU DESPLEGAMENT DE GOOGLE APPS SCRIPT
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzO-2Y0EBqrOLKjZOgX75Vxkllb2TEahf3tRhso4Wjn1SndDY7effqDYB9sJhfUWM3xTg/exec'; // <--- Pega la URL copiada aquí
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqFOJ3fa1V6_iT6bOEQOx1KpdEwsdX-4jtvHUny-QqampgpRGSFmVF_sP7Cj2LYGHcug/exec'; // <--- Pega la URL copiada aquí
 
-        // Llista de noms ocults (assegura't que coincideixi amb la teva llista desitjada)
-        const hiddenNames = [
+    const hiddenNames = [
             "Laura Castarlenas",
             "Daniel Argüello",
             "Timoteo Argüello",
@@ -208,222 +210,233 @@
             "Elisenda Anglada",
             "Àngels Castarlenas",
             "Noemí Cardellà",
-        ];
+    ];
 
-        // --- Funcions de normalització de text ---
-        function normalizeString(str) {
-            return str
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .toLowerCase()
-                .trim();
+    function normalizeString(str) {
+        return str
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+    }
+
+    // --- Referències als elements del DOM ---
+    const formTitle = document.getElementById('formTitle');
+    const nameValidationSection = document.getElementById('nameValidationSection');
+    const attendanceQuestionSection = document.getElementById('attendanceQuestionSection');
+    const dietQuestionSection = document.getElementById('dietQuestionSection');
+    const coachQuestionSection = document.getElementById('coachQuestionSection');
+    const commentSection = document.getElementById('commentSection');
+    const finalMessageSection = document.getElementById('finalMessageSection');
+
+    const userNameInput = document.getElementById('userNameInput');
+    const checkNameButton = document.getElementById('checkNameButton');
+    const message1 = document.getElementById('message1');
+    const message2 = document.getElementById('message2');
+    const message3 = document.getElementById('message3');
+    const message4 = document.getElementById('message4');
+    const messageComment = document.getElementById('messageComment'); // Missatge per la secció de comentaris
+
+    const attendanceYesButton = document.getElementById('attendanceYes');
+    const attendanceNoButton = document.getElementById('attendanceNo');
+
+    const dietYesButton = document.getElementById('dietYes');
+    const dietNoButton = document.getElementById('dietNo');
+    const dietTextInputDiv = document.getElementById('dietTextInput');
+    const dietTextarea = document.getElementById('dietText');
+    const nextFromDietButton = document.getElementById('nextFromDietButton');
+
+    const coachBarcelonaButton = document.getElementById('coachBarcelona');
+    const coachSabadellButton = document.getElementById('coachSabadell');
+    const coachNoBusButton = document.getElementById('coachNoBus');
+    
+    const commentTextarea = document.getElementById('commentText'); // Referència al textarea del comentari
+    const submitAllAnswersButton = document.getElementById('submitAllAnswersButton'); // Referència al botó d'enviar
+
+    const finalUserMessage = document.getElementById('finalUserMessage');
+
+
+    // --- Dades del formulari a enviar ---
+    let formDataToSend = {
+        userName: '',
+        assistencia: '',
+        dietaEspecial: '',
+        textDieta: '',
+        autocar: '',
+        textAutocar: '',
+        comentari: '', // Camp per al comentari
+        missatgeFinal: ''
+    };
+
+    // --- Funcions d'ajuda per gestionar la visibilitat i la selecció ---
+    function showSection(sectionElement) {
+        sectionElement.classList.remove('hidden');
+    }
+
+    function hideSection(sectionElement) {
+        sectionElement.classList.add('hidden');
+    }
+
+    function selectOption(buttonGroupElement, selectedButton, valueToSet, dataKey) {
+        Array.from(buttonGroupElement.children).forEach(button => {
+            button.classList.remove('selected');
+        });
+        selectedButton.classList.add('selected');
+        formDataToSend[dataKey] = valueToSet;
+    }
+
+    // --- Funció per enviar totes les dades a Google Sheets ---
+    async function sendDataToGoogleSheets() {
+        messageComment.textContent = "Enviant respostes... Si us plau, espera.";
+        messageComment.className = "message";
+        
+        if (submitAllAnswersButton) {
+            submitAllAnswersButton.disabled = true;
         }
 
-        // --- Referències als elements del DOM ---
-        // S'assegura que tots els elements existeixen abans d'intentar accedir-hi
-        const formTitle = document.getElementById('formTitle');
-        const nameValidationSection = document.getElementById('nameValidationSection');
-        const attendanceQuestionSection = document.getElementById('attendanceQuestionSection');
-        const dietQuestionSection = document.getElementById('dietQuestionSection');
-        const coachQuestionSection = document.getElementById('coachQuestionSection');
-        const finalMessageSection = document.getElementById('finalMessageSection');
-
-        const userNameInput = document.getElementById('userNameInput');
-        const checkNameButton = document.getElementById('checkNameButton');
-        const message1 = document.getElementById('message1');
-        const message2 = document.getElementById('message2');
-        const message3 = document.getElementById('message3');
-        const message4 = document.getElementById('message4');
-
-        const attendanceYesButton = document.getElementById('attendanceYes');
-        const attendanceNoButton = document.getElementById('attendanceNo');
-
-        const dietYesButton = document.getElementById('dietYes');
-        const dietNoButton = document.getElementById('dietNo');
-        const dietTextInputDiv = document.getElementById('dietTextInput');
-        const dietTextarea = document.getElementById('dietText');
-        const nextFromDietButton = document.getElementById('nextFromDietButton');
-
-        const coachBarcelonaButton = document.getElementById('coachBarcelona');
-        const coachSabadellButton = document.getElementById('coachSabadell');
-        const coachNoBusButton = document.getElementById('coachNoBus');
-        const submitAllAnswersButton = document.getElementById('submitAllAnswersButton');
-
-        const finalUserMessage = document.getElementById('finalUserMessage');
-
-
-        // --- Dades del formulari a enviar ---
-        let formDataToSend = {
-            userName: '',
-            assistencia: '',
-            dietaEspecial: '',
-            textDieta: '',
-            autocar: '',
-            textAutocar: '',
-            missatgeFinal: ''
-        };
-
-        // --- Funcions d'ajuda per gestionar la visibilitat i la selecció ---
-        function showSection(sectionElement) {
-            sectionElement.classList.remove('hidden');
+        const form = new FormData();
+        for (const key in formDataToSend) {
+            form.append(key, formDataToSend[key]);
         }
 
-        function hideSection(sectionElement) {
-            sectionElement.classList.add('hidden');
-        }
-
-        function selectOption(buttonGroupElement, selectedButton, valueToSet, dataKey) {
-            Array.from(buttonGroupElement.children).forEach(button => {
-                button.classList.remove('selected');
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: form,
             });
-            selectedButton.classList.add('selected');
-            formDataToSend[dataKey] = valueToSet;
-        }
 
-        // --- Funció per enviar totes les dades a Google Sheets ---
-        async function sendDataToGoogleSheets() {
-            message4.textContent = "Enviant respostes... Si us plau, espera.";
-            message4.className = "message";
-            
-            if (submitAllAnswersButton) { // Comprova que el botó existeixi abans d'intentar deshabilitar-lo
-                submitAllAnswersButton.disabled = true;
-            }
-
-            const form = new FormData();
-            for (const key in formDataToSend) {
-                form.append(key, formDataToSend[key]);
-            }
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: form,
-                });
-
-                if (response.ok) {
-                    message4.textContent = "Dades guardades amb èxit!";
-                    message4.className = "message success";
-                    
-                    hideSection(nameValidationSection);
-                    hideSection(attendanceQuestionSection);
-                    hideSection(dietQuestionSection);
-                    hideSection(coachQuestionSection); // S'amaga la secció de l'autocar
-                    
-                    showSection(finalMessageSection);
-                    finalUserMessage.textContent = formDataToSend.missatgeFinal;
-                    formTitle.classList.add('hidden');
-                } else {
-                    const errorText = await response.text();
-                    message4.textContent = `Error en guardar les dades: ${errorText}`;
-                    message4.className = "message error";
-                }
-            } catch (error) {
-                message4.textContent = `Error de connexió: ${error.message}`;
-                message4.className = "message error";
-            } finally {
-                if (submitAllAnswersButton) { // Comprova que el botó existeixi abans d'intentar habilitar-lo
-                    submitAllAnswersButton.disabled = false;
-                }
-            }
-        }
-
-
-        // --- Lògica principal del formulari (execució pas a pas) ---
-
-        // Pas 1: Validació del nom
-        checkNameButton.addEventListener('click', () => {
-            const userInput = userNameInput.value.trim();
-            
-            const normalizedUserInput = normalizeString(userInput);
-            const nameFound = hiddenNames.some(name => normalizeString(name) === normalizedUserInput);
-
-            if (nameFound) {
-                formDataToSend.userName = userInput;
-                message1.textContent = "Nom trobat! Benvingut/da.";
-                message1.className = "message success";
+            if (response.ok) {
+                messageComment.textContent = "Dades guardades amb èxit!";
+                messageComment.className = "message success";
+                
                 hideSection(nameValidationSection);
-                showSection(attendanceQuestionSection);
-                formTitle.textContent = "Confirma la teva assistència";
+                hideSection(attendanceQuestionSection);
+                hideSection(dietQuestionSection);
+                hideSection(coachQuestionSection);
+                hideSection(commentSection);
+                
+                showSection(finalMessageSection);
+                finalUserMessage.textContent = formDataToSend.missatgeFinal;
+                formTitle.classList.add('hidden');
             } else {
-                message1.textContent = "Nom no trobat. Torna-ho a provar.";
-                message1.className = "message error";
+                const errorText = await response.text();
+                // Afegeixo el text de l'error per tenir més informació
+                messageComment.textContent = `Error en guardar les dades: ${errorText}`; 
+                messageComment.className = "message error";
             }
-        });
+        } catch (error) {
+            // Afegeixo el missatge d'error per tenir més informació
+            messageComment.textContent = `Error de connexió: ${error.message}`; 
+            messageComment.className = "message error";
+        } finally {
+            if (submitAllAnswersButton) {
+                submitAllAnswersButton.disabled = false;
+            }
+        }
+    }
 
-        // Pas 2: Pregunta d'Assistència
-        attendanceYesButton.addEventListener('click', () => {
-            selectOption(attendanceQuestionSection.querySelector('.option-buttons'), attendanceYesButton, 'Sí', 'assistencia');
-            message2.textContent = "";
-            hideSection(attendanceQuestionSection);
-            showSection(dietQuestionSection);
-            formTitle.textContent = "Necessites una dieta especial?";
-        });
+    // --- Lògica principal del formulari (execució pas a pas) ---
 
-        attendanceNoButton.addEventListener('click', async () => {
-            selectOption(attendanceQuestionSection.querySelector('.option-buttons'), attendanceNoButton, 'No', 'assistencia');
-            message2.textContent = "Gràcies! Et trobarem a faltar.";
-            message2.className = "message success";
-            formDataToSend.missatgeFinal = "Gràcies! Et trobarem a faltar.";
+    // Pas 1: Validació del nom
+    checkNameButton.addEventListener('click', () => {
+        const userInput = userNameInput.value.trim();
+        
+        const normalizedUserInput = normalizeString(userInput);
+        const nameFound = hiddenNames.some(name => normalizeString(name) === normalizedUserInput);
 
-            hideSection(attendanceQuestionSection);
-            // Quan es diu 'No' a l'assistència, s'envien les dades i es finalitza
-            await sendDataToGoogleSheets();
-        });
+        if (nameFound) {
+            formDataToSend.userName = userInput;
+            message1.textContent = "Nom trobat! Benvingut/da.";
+            message1.className = "message success";
+            hideSection(nameValidationSection);
+            showSection(attendanceQuestionSection);
+            formTitle.textContent = "Confirma la teva assistència";
+        } else {
+            message1.textContent = "Nom no trobat. Torna-ho a provar.";
+            message1.className = "message error";
+        }
+    });
 
-        // Pas 3: Pregunta de Dieta Especial
-        dietYesButton.addEventListener('click', () => {
-            selectOption(dietQuestionSection.querySelector('.option-buttons'), dietYesButton, 'Sí', 'dietaEspecial');
-            showSection(dietTextInputDiv);
-            showSection(nextFromDietButton);
-            message3.textContent = "";
-        });
+    // Pas 2: Pregunta d'Assistència
+    attendanceYesButton.addEventListener('click', () => {
+        selectOption(attendanceQuestionSection.querySelector('.option-buttons'), attendanceYesButton, 'Sí', 'assistencia');
+        message2.textContent = "";
+        hideSection(attendanceQuestionSection);
+        showSection(dietQuestionSection);
+        formTitle.textContent = "Necessites una dieta especial?";
+    });
 
-        dietNoButton.addEventListener('click', () => {
-            selectOption(dietQuestionSection.querySelector('.option-buttons'), dietNoButton, 'No', 'dietaEspecial');
-            hideSection(dietTextInputDiv);
-            dietTextarea.value = ''; // Neteja el text de dieta si s'ha triat 'No'
-            formDataToSend.textDieta = '';
-            showSection(nextFromDietButton);
-            message3.textContent = "";
-        });
+    attendanceNoButton.addEventListener('click', async () => {
+        selectOption(attendanceQuestionSection.querySelector('.option-buttons'), attendanceNoButton, 'No', 'assistencia');
+        message2.textContent = "Gràcies! Et trobarem a faltar.";
+        message2.className = "message success";
+        formDataToSend.missatgeFinal = "Gràcies! Et trobarem a faltar.";
 
-        nextFromDietButton.addEventListener('click', () => {
-            formDataToSend.textDieta = dietTextarea.value.trim();
+        hideSection(attendanceQuestionSection);
+        await sendDataToGoogleSheets();
+    });
 
-            hideSection(dietQuestionSection);
-            showSection(coachQuestionSection);
-            formTitle.textContent = "Interessat en autocar?";
-        });
+    // Pas 3: Pregunta de Dieta Especial
+    dietYesButton.addEventListener('click', () => {
+        selectOption(dietQuestionSection.querySelector('.option-buttons'), dietYesButton, 'Sí', 'dietaEspecial');
+        showSection(dietTextInputDiv);
+        showSection(nextFromDietButton);
+        message3.textContent = "";
+    });
 
-        // Pas 4: Pregunta d'Autocar
-        coachBarcelonaButton.addEventListener('click', () => {
-            selectOption(coachQuestionSection.querySelector('.option-buttons'), coachBarcelonaButton, 'Sí', 'autocar');
-            formDataToSend.textAutocar = 'Barcelona';
-            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
-            message4.textContent = "";
-        });
+    dietNoButton.addEventListener('click', () => {
+        selectOption(dietQuestionSection.querySelector('.option-buttons'), dietNoButton, 'No', 'dietaEspecial');
+        hideSection(dietTextInputDiv);
+        dietTextarea.value = '';
+        formDataToSend.textDieta = '';
+        showSection(nextFromDietButton);
+        message3.textContent = "";
+    });
 
-        coachSabadellButton.addEventListener('click', () => {
-            selectOption(coachQuestionSection.querySelector('.option-buttons'), coachSabadellButton, 'Sí', 'autocar');
-            formDataToSend.textAutocar = 'Sabadell';
-            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
-            message4.textContent = "";
-        });
+    nextFromDietButton.addEventListener('click', () => {
+        formDataToSend.textDieta = dietTextarea.value.trim();
 
-        coachNoBusButton.addEventListener('click', () => {
-            selectOption(coachQuestionSection.querySelector('.option-buttons'), coachNoBusButton, 'No', 'autocar');
-            formDataToSend.textAutocar = ''; // Neteja el text de l'autocar si s'ha triat 'No'
-            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
-            message4.textContent = "";
-        });
+        hideSection(dietQuestionSection);
+        showSection(coachQuestionSection);
+        formTitle.textContent = "Interessat en autocar?";
+    });
 
-        // Final: Enviar totes les respostes
-        submitAllAnswersButton.addEventListener('click', async () => {
-            formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+    // Pas 4: Pregunta d'Autocar
+    coachBarcelonaButton.addEventListener('click', () => {
+        selectOption(coachQuestionSection.querySelector('.option-buttons'), coachBarcelonaButton, 'Sí', 'autocar');
+        formDataToSend.textAutocar = 'Barcelona';
+        message4.textContent = "";
+        hideSection(coachQuestionSection);
+        showSection(commentSection);
+        formTitle.textContent = "Tens algun comentari?";
+    });
 
-            await sendDataToGoogleSheets();
-        });
+    coachSabadellButton.addEventListener('click', () => {
+        selectOption(coachQuestionSection.querySelector('.option-buttons'), coachSabadellButton, 'Sí', 'autocar');
+        formDataToSend.textAutocar = 'Sabadell';
+        message4.textContent = "";
+        hideSection(coachQuestionSection);
+        showSection(commentSection);
+        formTitle.textContent = "Tens algun comentari?";
+    });
 
-    </script>
+    coachNoBusButton.addEventListener('click', () => {
+        selectOption(coachQuestionSection.querySelector('.option-buttons'), coachNoBusButton, 'No', 'autocar');
+        formDataToSend.textAutocar = '';
+        message4.textContent = "";
+        hideSection(coachQuestionSection);
+        showSection(commentSection);
+        formTitle.textContent = "Tens algun comentari?";
+    });
+
+    // Pas 5: Secció de Comentaris (i Botó Finalitzar)
+    submitAllAnswersButton.addEventListener('click', async () => {
+        formDataToSend.comentari = commentTextarea.value.trim(); // <-- Aquesta línia és crucial
+        formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+
+        await sendDataToGoogleSheets();
+    });
+
+</script>
 </body>
 </html>
