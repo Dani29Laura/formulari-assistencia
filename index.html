@@ -59,6 +59,10 @@
             box-sizing: border-box;
             color: #524634;
         }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
         button {
             background-color: #768931;
             color: white;
@@ -161,8 +165,9 @@
                 <button id="coachSabadell">Sabadell</button>
                 <button id="coachNoBus">No</button>
             </div>
+            <button id="submitAllAnswersButton" class="hidden">Finalitzar i Enviar</button>
             <div id="message4" class="message"></div>
-            </div>
+        </div>
 
         <div id="finalMessageSection" class="hidden">
             <p class="final-message" id="finalUserMessage"></p>
@@ -171,10 +176,12 @@
     </div>
 
     <script>
+        // COPIA AQUÍ L'URL DEL TEU DESPLEGAMENT DE GOOGLE APPS SCRIPT
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3rbdd_5Y45zIiVF6W7dKgycvaKLFHoIuuOOiFVW4lz-AvOCPU9xrIHuPivQlrTD9gkQ/exec'; // <--- Pega la URL copiada aquí
 
+        // Llista de noms ocults (assegura't que coincideixi amb la teva llista desitjada)
         const hiddenNames = [
-"Laura Castarlenas",
+           "Laura Castarlenas",
             "Daniel Argüello",
             "Timoteo Argüello",
             "Rosa Maria Ferrer",
@@ -200,6 +207,7 @@
             "Noemí Cardellà",
         ];
 
+        // --- Funcions de normalització de text ---
         function normalizeString(str) {
             return str
                 .normalize("NFD")
@@ -209,12 +217,13 @@
         }
 
         // --- Referències als elements del DOM ---
+        // S'assegura que tots els elements existeixen abans d'intentar accedir-hi
         const formTitle = document.getElementById('formTitle');
         const nameValidationSection = document.getElementById('nameValidationSection');
         const attendanceQuestionSection = document.getElementById('attendanceQuestionSection');
         const dietQuestionSection = document.getElementById('dietQuestionSection');
         const coachQuestionSection = document.getElementById('coachQuestionSection');
-        const finalMessageSection = document.getElementById('finalMessageSection'); // Nova secció final
+        const finalMessageSection = document.getElementById('finalMessageSection');
 
         const userNameInput = document.getElementById('userNameInput');
         const checkNameButton = document.getElementById('checkNameButton');
@@ -235,8 +244,10 @@
         const coachBarcelonaButton = document.getElementById('coachBarcelona');
         const coachSabadellButton = document.getElementById('coachSabadell');
         const coachNoBusButton = document.getElementById('coachNoBus');
-        
+        const submitAllAnswersButton = document.getElementById('submitAllAnswersButton');
+
         const finalUserMessage = document.getElementById('finalUserMessage');
+
 
         // --- Dades del formulari a enviar ---
         let formDataToSend = {
@@ -246,7 +257,6 @@
             textDieta: '',
             autocar: '',
             textAutocar: '',
-            // comentari: '', // Aquesta línia no hi era
             missatgeFinal: ''
         };
 
@@ -269,13 +279,11 @@
 
         // --- Funció per enviar totes les dades a Google Sheets ---
         async function sendDataToGoogleSheets() {
-            // No hi ha missatgeComment ara, es farà directament el missatge final
+            message4.textContent = "Enviant respostes... Si us plau, espera.";
+            message4.className = "message";
             
-            // Creem un botó temporal per deshabilitar-lo si n'hi hagués un d'actiu
-            let currentActiveButton = null;
-            if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
-                currentActiveButton = document.activeElement;
-                currentActiveButton.disabled = true;
+            if (submitAllAnswersButton) { // Comprova que el botó existeixi abans d'intentar deshabilitar-lo
+                submitAllAnswersButton.disabled = true;
             }
 
             const form = new FormData();
@@ -290,26 +298,28 @@
                 });
 
                 if (response.ok) {
+                    message4.textContent = "Dades guardades amb èxit!";
+                    message4.className = "message success";
+                    
                     hideSection(nameValidationSection);
                     hideSection(attendanceQuestionSection);
                     hideSection(dietQuestionSection);
-                    hideSection(coachQuestionSection); // Amaga la secció d'autocar
+Section(coachQuestionSection); // S'amaga la secció de l'autocar
                     
                     showSection(finalMessageSection);
                     finalUserMessage.textContent = formDataToSend.missatgeFinal;
                     formTitle.classList.add('hidden');
                 } else {
                     const errorText = await response.text();
-                    finalUserMessage.textContent = `Error en guardar les dades: ${errorText}`;
-                    finalUserMessage.className = "final-message error"; // O pots mostrar un missatge d'error aquí
-                    // Pots decidir què fer amb les seccions, potser mantenir-les visibles per a l'usuari
+                    message4.textContent = `Error en guardar les dades: ${errorText}`;
+                    message4.className = "message error";
                 }
             } catch (error) {
-                finalUserMessage.textContent = `Error de connexió: ${error.message}`;
-                finalUserMessage.className = "final-message error";
+                message4.textContent = `Error de connexió: ${error.message}`;
+                message4.className = "message error";
             } finally {
-                if (currentActiveButton) {
-                    currentActiveButton.disabled = false;
+                if (submitAllAnswersButton) { // Comprova que el botó existeixi abans d'intentar habilitar-lo
+                    submitAllAnswersButton.disabled = false;
                 }
             }
         }
@@ -353,7 +363,8 @@
             formDataToSend.missatgeFinal = "Gràcies! Et trobarem a faltar.";
 
             hideSection(attendanceQuestionSection);
-            await sendDataToGoogleSheets(); // Envia directament
+            // Quan es diu 'No' a l'assistència, s'envien les dades i es finalitza
+            await sendDataToGoogleSheets();
         });
 
         // Pas 3: Pregunta de Dieta Especial
@@ -367,7 +378,7 @@
         dietNoButton.addEventListener('click', () => {
             selectOption(dietQuestionSection.querySelector('.option-buttons'), dietNoButton, 'No', 'dietaEspecial');
             hideSection(dietTextInputDiv);
-            dietTextarea.value = '';
+            dietTextarea.value = ''; // Neteja el text de dieta si s'ha triat 'No'
             formDataToSend.textDieta = '';
             showSection(nextFromDietButton);
             message3.textContent = "";
@@ -382,31 +393,32 @@
         });
 
         // Pas 4: Pregunta d'Autocar
-        coachBarcelonaButton.addEventListener('click', async () => {
+        coachBarcelonaButton.addEventListener('click', () => {
             selectOption(coachQuestionSection.querySelector('.option-buttons'), coachBarcelonaButton, 'Sí', 'autocar');
             formDataToSend.textAutocar = 'Barcelona';
-            formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
             message4.textContent = "";
-            hideSection(coachQuestionSection); // Amaga la secció d'autocar
-            await sendDataToGoogleSheets(); // Envia directament
         });
 
-        coachSabadellButton.addEventListener('click', async () => {
+        coachSabadellButton.addEventListener('click', () => {
             selectOption(coachQuestionSection.querySelector('.option-buttons'), coachSabadellButton, 'Sí', 'autocar');
             formDataToSend.textAutocar = 'Sabadell';
-            formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
             message4.textContent = "";
-            hideSection(coachQuestionSection); // Amaga la secció d'autocar
-            await sendDataToGoogleSheets(); // Envia directament
         });
 
-        coachNoBusButton.addEventListener('click', async () => {
+        coachNoBusButton.addEventListener('click', () => {
             selectOption(coachQuestionSection.querySelector('.option-buttons'), coachNoBusButton, 'No', 'autocar');
-            formDataToSend.textAutocar = '';
-            formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+            formDataToSend.textAutocar = ''; // Neteja el text de l'autocar si s'ha triat 'No'
+            showSection(submitAllAnswersButton); // Fa visible el botó 'Finalitzar i Enviar'
             message4.textContent = "";
-            hideSection(coachQuestionSection); // Amaga la secció d'autocar
-            await sendDataToGoogleSheets(); // Envia directament
+        });
+
+        // Final: Enviar totes les respostes
+        submitAllAnswersButton.addEventListener('click', async () => {
+            formDataToSend.missatgeFinal = "Gràcies! Esperem amb molta il·lusió que arribi el dia.";
+
+            await sendDataToGoogleSheets();
         });
 
     </script>
